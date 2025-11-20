@@ -1,0 +1,27 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: product-service
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://postgres-product:5432/productdb}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+
+  jpa:
+    show-sql: false
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://eureka-server:8761/eureka/}
+
+# Zipkin Configuration for Docker
+management.zipkin.tracing.endpoint: ${ZIPKIN_BASE_URL:http://zipkin:9411}/api/v2/spans
+
+logging:
+  level:
+    com.ecommerce.product: INFO
+    org.hibernate.SQL: INFO
