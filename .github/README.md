@@ -8,12 +8,12 @@ Automated build, test, and deployment for the E-Commerce Microservices Platform.
 
 ```
 ┌──────────────────────────────────────────────────┐
-│  TRIGGER: Push/PR to main or develop            │
+│  TRIGGER: Push/PR to main or develop             │
 └─────────────────┬────────────────────────────────┘
                   │
                   ▼
 ┌──────────────────────────────────────────────────┐
-│  1. CHANGE DETECTION (Path Filters)             │
+│  1. CHANGE DETECTION (Path Filters)              │
 │     → Identifies modified services               │
 │     → Skips unchanged services                   │
 │     → Saves 15-20 minutes                        │
@@ -21,11 +21,11 @@ Automated build, test, and deployment for the E-Commerce Microservices Platform.
                   │
                   ▼
 ┌──────────────────────────────────────────────────┐
-│  2. BUILD & TEST (Maven + JUnit 5)              │
+│  2. BUILD & TEST (Maven + JUnit 5)               │
 │     ├─ mvn clean compile                         │
-│     ├─ mvn test  (Mockito unit tests)           │
-│     └─ mvn package  (executable JAR)            │
-│                                                   │
+│     ├─ mvn test  (Mockito unit tests)            │
+│     └─ mvn package  (executable JAR)             │
+│                                                  │
 │     ✓ Parallel execution for speed               │
 │     ✓ Test reports generated                     │
 └─────────────────┬────────────────────────────────┘
@@ -34,11 +34,11 @@ Automated build, test, and deployment for the E-Commerce Microservices Platform.
 ┌──────────────────────────────────────────────────┐
 │  3. DOCKER BUILD & PUSH                          │
 │     ├─ Two-stage Dockerfile:                     │
-│     │  ├─ Build: Maven (compile + package)      │
-│     │  └─ Runtime: JRE 17 (minimal)             │
+│     │  ├─ Build: Maven (compile + package)       │
+│     │  └─ Runtime: JRE 17 (minimal)              │
 │     ├─ Layer caching enabled                     │
-│     ├─ Version: v1.0.<build>-<sha>              │
-│     └─ Push: smamm/ecommerce-<service>          │
+│     ├─ Version: v1.0.<build>-<sha>               │
+│     └─ Push: smamm/ecommerce-<service>           │
 └─────────────────┬────────────────────────────────┘
                   │
                   ▼
