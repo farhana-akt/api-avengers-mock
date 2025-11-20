@@ -39,7 +39,7 @@ async function login(event) {
     const password = document.getElementById('loginPassword').value;
 
     try {
-        const response = await fetch(`${API_BASE_URL}/users/login`, {
+        const response = await fetch(`${API_BASE_URL}/auth/login`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -72,7 +72,7 @@ async function register(event) {
     const lastName = document.getElementById('regLastName').value;
 
     try {
-        const response = await fetch(`${API_BASE_URL}/users/register`, {
+        const response = await fetch(`${API_BASE_URL}/auth/register`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

@@ -1,0 +1,176 @@
+# Main CI/CD Orchestrator
+# This workflow coordinates all service-specific workflows
+
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  DOCKER_USERNAME: smamm
+  JAVA_VERSION: '17'
+
+jobs:
+  # Detect which services have changed
+  detect-changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      eureka: ${{ steps.filter.outputs.eureka }}
+      config: ${{ steps.filter.outputs.config }}
+      gateway: ${{ steps.filter.outputs.gateway }}
+      user: ${{ steps.filter.outputs.user }}
+      auth: ${{ steps.filter.outputs.auth }}
+      product: ${{ steps.filter.outputs.product }}
+      inventory: ${{ steps.filter.outputs.inventory }}
+      cart: ${{ steps.filter.outputs.cart }}
+      order: ${{ steps.filter.outputs.order }}
+      payment: ${{ steps.filter.outputs.payment }}
+      notification: ${{ steps.filter.outputs.notification }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for changes
+        uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            eureka:
+              - 'eureka-server/**'
+            config:
+              - 'config-server/**'
+            gateway:
+              - 'api-gateway/**'
+            user:
+              - 'user-service/**'
+            auth:
+              - 'auth-service/**'
+            product:
+              - 'product-service/**'
+            inventory:
+              - 'inventory-service/**'
+            cart:
+              - 'cart-service/**'
+            order:
+              - 'order-service/**'
+            payment:
+              - 'payment-service/**'
+            notification:
+              - 'notification-service/**'
+            frontend:
+              - 'frontend/**'
+
+  # Call service-specific workflows
+  build-eureka:
+    if: needs.detect-changes.outputs.eureka == 'true'
+    needs: detect-changes
+    uses: ./.github/workflows/service-build.yml
+    with:
+      service-name: eureka-server
+    secrets: inherit
+
+  build-config:
+    if: needs.detect-changes.outputs.config == 'true'
+    needs: detect-changes
+    uses: ./.github/workflows/service-build.yml
+    with:
+      service-name: config-server
+    secrets: inherit
+
+  build-gateway:
+    if: needs.detect-changes.outputs.gateway == 'true'
+    needs: detect-changes
+    uses: ./.github/workflows/service-build.yml
+    with:
+      service-name: api-gateway
+    secrets: inherit
+
+  build-user:
+    if: needs.detect-changes.outputs.user == 'true'
+    needs: detect-changes
+    uses: ./.github/workflows/service-build.yml
+    with:
+      service-name: user-service
+    secrets: inherit
+
+  build-auth:
+    if: needs.detect-changes.outputs.auth == 'true'
+    needs: detect-changes
+    uses: ./.github/workflows/service-build.yml
+    with:
+      service-name: auth-service
+    secrets: inherit
+
+  build-product:
+    if: needs.detect-changes.outputs.product == 'true'
+    needs: detect-changes
+    uses: ./.github/workflows/service-build.yml
+    with:
+      service-name: product-service
+    secrets: inherit
+
+  build-inventory:
+    if: needs.detect-changes.outputs.inventory == 'true'
+    needs: detect-changes
+    uses: ./.github/workflows/service-build.yml
+    with:
+      service-name: inventory-service
+    secrets: inherit
+
+  build-cart:
+    if: needs.detect-changes.outputs.cart == 'true'
+    needs: detect-changes
+    uses: ./.github/workflows/service-build.yml
+    with:
+      service-name: cart-service
+    secrets: inherit
+
+  build-order:
+    if: needs.detect-changes.outputs.order == 'true'
+    needs: detect-changes
+    uses: ./.github/workflows/service-build.yml
+    with:
+      service-name: order-service
+    secrets: inherit
+
+  build-payment:
+    if: needs.detect-changes.outputs.payment == 'true'
+    needs: detect-changes
+    uses: ./.github/workflows/service-build.yml
+    with:
+      service-name: payment-service
+    secrets: inherit
+
+  build-notification:
+    if: needs.detect-changes.outputs.notification == 'true'
+    needs: detect-changes
+    uses: ./.github/workflows/service-build.yml
+    with:
+      service-name: notification-service
+    secrets: inherit
+
+  build-frontend:
+    if: needs.detect-changes.outputs.frontend == 'true'
+    needs: detect-changes
+    uses: ./.github/workflows/frontend-build.yml
+    secrets: inherit
+
+  # Final status check
+  pipeline-status:
+    name: Pipeline Status
+    needs: [
+      build-eureka, build-config, build-gateway,
+      build-user, build-auth, build-product,
+      build-inventory, build-cart, build-order,
+      build-payment, build-notification, build-frontend
+    ]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Status
+        run: echo "🎉 CI/CD Pipeline completed!"

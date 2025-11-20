@@ -325,7 +325,33 @@ services:
   # MICROSERVICES GROUP (Business Logic Services)
   # ============================================================================
 
-  # User Service - Authentication & User Management
+  # Auth Service - Authentication & JWT Token Generation
+  auth-service:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    container_name: auth-service
+    profiles: ["microservices", "full"]
+    ports:
+      - "8088:8088"
+    networks:
+      - microservices-network
+    depends_on:
+      eureka-server:
+        condition: service_healthy
+      postgres-user:
+        condition: service_healthy
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres-user:5432/userdb
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=postgres
+      - ZIPKIN_BASE_URL=http://zipkin:9411
+      - JWT_SECRET=mySecretKeyForJWTTokenGenerationAndValidation12345678
+    restart: unless-stopped
+
+  # User Service - User Profile Management
   user-service:
     build:
       context: ./user-service
@@ -348,7 +374,6 @@ services:
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=postgres
       - ZIPKIN_BASE_URL=http://zipkin:9411
-      - JWT_SECRET=mySecretKeyForJWTTokenGenerationAndValidation12345678
     restart: unless-stopped
 
   # Product Service - Product Catalog

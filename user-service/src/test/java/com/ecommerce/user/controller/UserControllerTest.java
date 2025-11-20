@@ -10,11 +10,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * Test for AuthController version endpoint
+ * Test for UserController endpoints
  */
 @SpringBootTest
 @AutoConfigureMockMvc
-public class AuthControllerTest {
+public class UserControllerTest {
 
     @Autowired
     private MockMvc mockMvc;

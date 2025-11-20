@@ -24,6 +24,14 @@ spring:
 
       # Service Routes
       routes:
+        # Auth Service Routes (new)
+        - id: auth-service
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - name: JwtAuthenticationFilter
+
         # User Service Routes
         - id: user-service
           uri: lb://user-service

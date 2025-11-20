@@ -1,6 +1,6 @@
-package com.ecommerce.user.security;
+package com.ecommerce.auth.security;
 
-import com.ecommerce.user.entity.User;
+import com.ecommerce.auth.entity.User;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;

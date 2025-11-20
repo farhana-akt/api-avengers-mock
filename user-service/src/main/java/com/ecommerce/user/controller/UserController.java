@@ -1,11 +1,7 @@
 package com.ecommerce.user.controller;
 
-import com.ecommerce.user.dto.AuthResponse;
-import com.ecommerce.user.dto.LoginRequest;
-import com.ecommerce.user.dto.RegisterRequest;
 import com.ecommerce.user.dto.UserResponse;
 import com.ecommerce.user.service.UserService;
-import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,46 +13,18 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Authentication Controller
+ * User Controller
  *
- * Handles user registration, login, and profile endpoints.
+ * Handles user profile endpoints.
  */
 @RestController
 @RequestMapping("/api/users")
-public class AuthController {
+public class UserController {
 
-    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
+    private static final Logger logger = LoggerFactory.getLogger(UserController.class);
 
     @Autowired
     private UserService userService;
-
-    /**
-     * Register a new user
-     */
-    @PostMapping("/register")
-    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
-        try {
-            AuthResponse response = userService.register(request);
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
-        } catch (Exception e) {
-            logger.error("Registration failed: {}", e.getMessage());
-            return ResponseEntity.badRequest().body(errorResponse(e.getMessage()));
-        }
-    }
-
-    /**
-     * User login
-     */
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest request) {
-        try {
-            AuthResponse response = userService.login(request);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            logger.error("Login failed: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorResponse(e.getMessage()));
-        }
-    }
 
     /**
      * Get user profile (requires authentication via API Gateway)
