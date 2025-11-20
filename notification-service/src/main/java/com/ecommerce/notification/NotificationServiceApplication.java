@@ -17,7 +17,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
  * - Distributed tracing with Zipkin
  *
  * @version 1.0.0
- * @author API Avengers Team
+ * @author API Avengers Team - v1.0
  */
 @SpringBootApplication
 @EnableDiscoveryClient

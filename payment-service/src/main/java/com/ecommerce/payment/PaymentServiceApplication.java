@@ -15,7 +15,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
  * - Service discovery with Eureka
  * - Distributed tracing with Zipkin
  *
- * @author API Avengers Team
+ * @author API Avengers Team - v1.0
  */
 @SpringBootApplication
 @EnableDiscoveryClient

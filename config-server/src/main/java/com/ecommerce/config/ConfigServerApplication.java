@@ -12,6 +12,7 @@ import org.springframework.cloud.config.server.EnableConfigServer;
  *
  * Port: 8888
  * Access: http://localhost:8888/{application}/{profile}
+ * @author API Avengers Team - v1.0
  */
 @SpringBootApplication
 @EnableConfigServer

@@ -17,7 +17,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
  * - Distributed tracing with Zipkin
  * - Metrics collection for Prometheus
  *
- * @author API Avengers Team
+ * @author API Avengers Team - v1.0
  */
 @SpringBootApplication
 @EnableDiscoveryClient
