@@ -5,6 +5,9 @@
 
 set -e
 
+# Navigate to project root
+cd "$(dirname "$0")/.."
+
 echo "========================================="
 echo "Running Tests for All Microservices"
 echo "========================================="

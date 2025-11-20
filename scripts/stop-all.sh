@@ -2,6 +2,9 @@
 
 # Stop All Services Script
 
+# Navigate to project root
+cd "$(dirname "$0")/.."
+
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 YELLOW='\033[1;33m'

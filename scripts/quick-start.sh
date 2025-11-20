@@ -5,6 +5,9 @@
 
 set -e
 
+# Navigate to project root
+cd "$(dirname "$0")/.."
+
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
@@ -27,7 +30,7 @@ echo ""
 
 # Build all services
 echo -e "${BLUE}Step 1/3: Building all microservices...${NC}"
-./build-all.sh
+./scripts/build-all.sh
 
 echo ""
 echo -e "${BLUE}Step 2/3: Starting Docker containers...${NC}"
