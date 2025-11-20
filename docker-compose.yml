@@ -172,7 +172,7 @@ services:
       - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
     volumes:
       - grafana-data:/var/lib/grafana
-      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./utilities/grafana/provisioning:/etc/grafana/provisioning
     networks:
       - microservices-network
     depends_on:
@@ -219,7 +219,7 @@ services:
   # Eureka Server - Service Discovery
   eureka-server:
     build:
-      context: ./eureka-server
+      context: ./services/eureka-server
       dockerfile: Dockerfile
     container_name: eureka-server
     profiles: ["infrastructure", "full"]
@@ -240,7 +240,7 @@ services:
   # Config Server - Centralized Configuration
   config-server:
     build:
-      context: ./config-server
+      context: ./services/config-server
       dockerfile: Dockerfile
     container_name: config-server
     profiles: ["infrastructure", "full"]
@@ -265,7 +265,7 @@ services:
   # API Gateway - Entry Point with JWT Validation
   api-gateway:
     build:
-      context: ./api-gateway
+      context: ./services/api-gateway
       dockerfile: Dockerfile
     container_name: api-gateway
     profiles: ["infrastructure", "full"]
@@ -289,7 +289,7 @@ services:
   # Frontend - Web UI
   frontend:
     build:
-      context: ./frontend
+      context: ./services/frontend
       dockerfile: Dockerfile
     container_name: frontend
     profiles: ["infrastructure", "full"]
@@ -328,7 +328,7 @@ services:
   # Auth Service - Authentication & JWT Token Generation
   auth-service:
     build:
-      context: ./auth-service
+      context: ./services/auth-service
       dockerfile: Dockerfile
     container_name: auth-service
     profiles: ["microservices", "full"]
@@ -354,7 +354,7 @@ services:
   # User Service - User Profile Management
   user-service:
     build:
-      context: ./user-service
+      context: ./services/user-service
       dockerfile: Dockerfile
     container_name: user-service
     profiles: ["microservices", "full"]
@@ -379,7 +379,7 @@ services:
   # Product Service - Product Catalog
   product-service:
     build:
-      context: ./product-service
+      context: ./services/product-service
       dockerfile: Dockerfile
     container_name: product-service
     profiles: ["microservices", "full"]
@@ -404,7 +404,7 @@ services:
   # Inventory Service - Stock Management
   inventory-service:
     build:
-      context: ./inventory-service
+      context: ./services/inventory-service
       dockerfile: Dockerfile
     container_name: inventory-service
     profiles: ["microservices", "full"]
@@ -429,7 +429,7 @@ services:
   # Cart Service - Shopping Cart with Redis
   cart-service:
     build:
-      context: ./cart-service
+      context: ./services/cart-service
       dockerfile: Dockerfile
     container_name: cart-service
     profiles: ["microservices", "full"]
@@ -453,7 +453,7 @@ services:
   # Order Service - Order Orchestration with Saga Pattern
   order-service:
     build:
-      context: ./order-service
+      context: ./services/order-service
       dockerfile: Dockerfile
     container_name: order-service
     profiles: ["microservices", "full"]
@@ -484,7 +484,7 @@ services:
   # Payment Service - Payment Processing
   payment-service:
     build:
-      context: ./payment-service
+      context: ./services/payment-service
       dockerfile: Dockerfile
     container_name: payment-service
     profiles: ["microservices", "full"]
@@ -510,7 +510,7 @@ services:
   # Notification Service - Email/SMS Notifications
   notification-service:
     build:
-      context: ./notification-service
+      context: ./services/notification-service
       dockerfile: Dockerfile
     container_name: notification-service
     profiles: ["microservices", "full"]

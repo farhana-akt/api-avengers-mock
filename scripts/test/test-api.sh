@@ -6,7 +6,7 @@
 set -e
 
 # Navigate to project root
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/../.."
 
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'

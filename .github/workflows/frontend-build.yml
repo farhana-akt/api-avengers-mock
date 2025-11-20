@@ -21,9 +21,9 @@ jobs:
       - name: Validate Frontend Files
         run: |
           echo "✅ Validating frontend structure..."
-          test -f "frontend/index.html" || (echo "❌ index.html not found" && exit 1)
-          test -f "frontend/app.js" || (echo "❌ app.js not found" && exit 1)
-          test -f "frontend/style.css" || (echo "❌ style.css not found" && exit 1)
+          test -f "services/frontend/index.html" || (echo "❌ index.html not found" && exit 1)
+          test -f "services/frontend/app.js" || (echo "❌ app.js not found" && exit 1)
+          test -f "services/frontend/style.css" || (echo "❌ style.css not found" && exit 1)
           echo "✅ All frontend files present"
 
   docker-build-push:
@@ -54,7 +54,7 @@ jobs:
       - name: Build and Push Frontend
         uses: docker/build-push-action@v5
         with:
-          context: ./frontend
+          context: ./services/frontend
           push: true
           tags: |
             ${{ env.DOCKER_USERNAME }}/ecommerce-frontend:${{ steps.version.outputs.tag }}

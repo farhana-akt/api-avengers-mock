@@ -6,7 +6,7 @@
 set -e
 
 # Navigate to project root
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/../.."
 
 echo "========================================="
 echo "Running Tests for All Microservices"
@@ -36,7 +36,7 @@ failed_services=()
 for service in "${services[@]}"
 do
   echo -e "${BLUE}Testing $service...${NC}"
-  cd "$service" || exit
+  cd "services/$service" || exit
 
   if mvn test; then
     echo -e "${GREEN}✓ $service tests passed${NC}"

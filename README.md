@@ -11,16 +11,16 @@ A production-ready microservices-based e-commerce platform built with Spring Boo
 
 ```bash
 # One-command setup: build, start, and verify all services
-./scripts/quick-start.sh
+./scripts/build/quick-start.sh
 
 # Wait 2-3 minutes for services to be healthy, then populate test data
-./scripts/populate-databases.sh
+./scripts/test/populate-databases.sh
 
 # Test the complete API flow
-./scripts/test-api.sh
+./scripts/test/test-api.sh
 
 # Run load tests (requires K6)
-./scripts/run-load-test.sh
+./scripts/test/run-load-test.sh
 ```
 
 **That's it!** The platform is now running with:
@@ -151,11 +151,11 @@ For detailed documentation, see **[USAGE.md](USAGE.md)** which covers:
 All automation scripts are in the `/scripts` directory:
 
 ```bash
-./scripts/quick-start.sh    # Build and start everything
-./scripts/build-all.sh       # Build all microservices
-./scripts/test-all.sh        # Run all unit tests
-./scripts/test-api.sh        # Test complete order flow
-./scripts/stop-all.sh        # Stop all services
+./scripts/build/quick-start.sh    # Build and start everything
+./scripts/build/build-all.sh       # Build all microservices
+./scripts/test/test-all.sh        # Run all unit tests
+./scripts/test/test-api.sh        # Test complete order flow
+./scripts/build/stop-all.sh        # Stop all services
 ```
 
 ## Testing
@@ -163,7 +163,7 @@ All automation scripts are in the `/scripts` directory:
 ### Unit Tests (Mockito)
 ```bash
 # Test all services
-./scripts/test-all.sh
+./scripts/test/test-all.sh
 
 # Test specific service
 cd user-service && mvn test
@@ -261,7 +261,7 @@ Test platform performance with K6:
 brew install k6
 
 # Run comprehensive load test
-./scripts/run-load-test.sh
+./scripts/test/run-load-test.sh
 ```
 
 The load test simulates:
@@ -280,7 +280,7 @@ Load profile:
 
 1. Open Grafana (http://localhost:3000)
 2. Go to **Microservices Overview** dashboard
-3. Run load test: `./scripts/run-load-test.sh`
+3. Run load test: `./scripts/test/run-load-test.sh`
 4. Watch real-time metrics:
    - Request rate increasing
    - Response time behavior
@@ -384,7 +384,7 @@ The platform includes realistic mock data:
 
 Load data:
 ```bash
-./scripts/populate-databases.sh
+./scripts/test/populate-databases.sh
 ```
 
 ## 🛠️ Development
@@ -459,7 +459,7 @@ k6 version
 curl http://localhost:8080/actuator/health
 
 # Ensure databases have data
-./scripts/populate-databases.sh
+./scripts/test/populate-databases.sh
 ```
 
 ### Build Errors
@@ -472,7 +472,7 @@ mvn clean
 docker-compose --profile full down --rmi all
 
 # Rebuild
-./scripts/build-all.sh
+./scripts/build/build-all.sh
 ```
 
 ## 📚 Additional Documentation
@@ -503,7 +503,7 @@ docker-compose --profile full down --rmi all
 **Data & Scripts:**
 - ✅ 50 mock products across 5 categories (Electronics, Fashion, Home, Sports, Books)
 - ✅ Realistic inventory scenarios (high/medium/low stock)
-- ✅ One-command database population: `./scripts/populate-databases.sh`
+- ✅ One-command database population: `./scripts/test/populate-databases.sh`
 
 ## 🎓 Learning Resources
 

@@ -5,7 +5,7 @@
 
 set -e
 
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/../.."
 
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
@@ -47,7 +47,7 @@ echo ""
 echo -e "${BLUE}Checking if services are running...${NC}"
 if ! curl -s "${BASE_URL}/actuator/health" > /dev/null 2>&1; then
     echo -e "${YELLOW}Warning: Cannot reach API Gateway at ${BASE_URL}${NC}"
-    echo "Please make sure services are running with: ./scripts/quick-start.sh"
+    echo "Please make sure services are running with: ./scripts/build/quick-start.sh"
     echo ""
     read -p "Continue anyway? (y/n) " -n 1 -r
     echo
@@ -67,7 +67,7 @@ echo ""
 k6 run \
   --out json=load-test-results.json \
   -e BASE_URL="${BASE_URL}" \
-  scripts/load-test.js
+  scripts/test/load-test.js
 
 echo ""
 echo -e "${GREEN}=========================================${NC}"
