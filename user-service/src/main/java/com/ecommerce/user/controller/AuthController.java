@@ -99,6 +99,19 @@ public class AuthController {
     }
 
     /**
+     * Get service version
+     */
+    @GetMapping("/version")
+    public ResponseEntity<Map<String, String>> version() {
+        Map<String, String> response = new HashMap<>();
+        response.put("service", "user-service");
+        response.put("version", "1.0.0");
+        response.put("build", "2025-11-20");
+        logger.info("Version endpoint called");
+        return ResponseEntity.ok(response);
+    }
+
+    /**
      * Helper method to create error response
      */
     private Map<String, String> errorResponse(String message) {

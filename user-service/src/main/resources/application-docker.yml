@@ -23,10 +23,19 @@ eureka:
 jwt:
   secret: ${JWT_SECRET:mySecretKeyForJWTTokenGenerationAndValidation12345678}
 
-# Zipkin Configuration for Docker
-management.zipkin.tracing.endpoint: ${ZIPKIN_BASE_URL:http://zipkin:9411}/api/v2/spans
+# Tracing Configuration
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: ${ZIPKIN_BASE_URL:http://zipkin:9411}/api/v2/spans
 
+# Logging with Trace IDs
 logging:
   level:
-    com.ecommerce.user: INFO
-    org.hibernate.SQL: INFO
+    '[com.ecommerce.user]': INFO
+    '[org.hibernate.SQL]': INFO
+  pattern:
+    level: "%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]"

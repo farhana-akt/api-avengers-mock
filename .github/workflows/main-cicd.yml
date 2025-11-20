@@ -1,0 +1,316 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  DOCKER_USERNAME: smamm
+  JAVA_VERSION: '17'
+
+jobs:
+  # ═══════════════════════════════════════════════════════════════════════════
+  # CHANGE DETECTION - Determines which services need to be built
+  # ═══════════════════════════════════════════════════════════════════════════
+  detect-changes:
+    name: Detect Changed Services
+    runs-on: ubuntu-latest
+    outputs:
+      has-backend-changes: ${{ steps.filter.outputs.backend }}
+      has-frontend-changes: ${{ steps.filter.outputs.frontend }}
+      services: ${{ steps.set-matrix.outputs.services }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for service changes
+        uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'eureka-server/**'
+              - 'config-server/**'
+              - 'api-gateway/**'
+              - 'user-service/**'
+              - 'product-service/**'
+              - 'inventory-service/**'
+              - 'cart-service/**'
+              - 'order-service/**'
+              - 'payment-service/**'
+              - 'notification-service/**'
+            frontend:
+              - 'frontend/**'
+
+      - name: Set service matrix
+        id: set-matrix
+        run: |
+          SERVICES='["eureka-server","config-server","api-gateway","user-service","product-service","inventory-service","cart-service","order-service","payment-service","notification-service"]'
+          echo "services=$SERVICES" >> $GITHUB_OUTPUT
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # BUILD & TEST - Builds and tests Java microservices
+  # Uses Maven for:
+  # - Compilation (mvn clean compile)
+  # - Unit testing (mvn test with JUnit 5 & Mockito)
+  # - Packaging (mvn package - creates executable JARs)
+  # ═══════════════════════════════════════════════════════════════════════════
+  build-test-services:
+    name: Build & Test Services
+    needs: detect-changes
+    if: needs.detect-changes.outputs.has-backend-changes == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: ${{fromJson(needs.detect-changes.outputs.services)}}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: 'maven'
+
+      - name: Build with Maven
+        working-directory: ./${{ matrix.service }}
+        run: |
+          echo "📦 Compiling ${{ matrix.service }}..."
+          mvn clean compile -B -V
+
+      - name: Run Unit Tests
+        working-directory: ./${{ matrix.service }}
+        run: |
+          echo "🧪 Testing ${{ matrix.service }} with JUnit 5 & Mockito..."
+          mvn test -B
+
+      - name: Generate Test Report
+        if: always()
+        working-directory: ./${{ matrix.service }}
+        run: |
+          if [ -d "target/surefire-reports" ]; then
+            echo "📊 Test Results for ${{ matrix.service }}:"
+            find target/surefire-reports -name "*.xml" -exec cat {} \; | grep -E "(testcase|failure|error)" || true
+          fi
+
+      - name: Package Application
+        working-directory: ./${{ matrix.service }}
+        run: |
+          echo "📦 Packaging ${{ matrix.service }} as executable JAR..."
+          mvn package -DskipTests -B
+
+      - name: Upload Build Artifact
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.service }}-jar
+          path: ${{ matrix.service }}/target/*.jar
+          retention-days: 1
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # FRONTEND BUILD - Validates frontend files
+  # ═══════════════════════════════════════════════════════════════════════════
+  build-frontend:
+    name: Build Frontend
+    needs: detect-changes
+    if: needs.detect-changes.outputs.has-frontend-changes == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate Frontend Files
+        run: |
+          echo "✅ Validating frontend structure..."
+          test -f "frontend/index.html" || (echo "❌ index.html not found" && exit 1)
+          test -f "frontend/app.js" || (echo "❌ app.js not found" && exit 1)
+          test -f "frontend/style.css" || (echo "❌ style.css not found" && exit 1)
+          echo "✅ All frontend files present"
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # DOCKER BUILD & PUSH - Creates and publishes Docker images
+  # Only runs on main branch after successful tests
+  #
+  # Build Process:
+  # 1. Uses Docker Buildx for multi-platform support
+  # 2. Two-stage Dockerfile:
+  #    - Stage 1 (Build): Maven compilation & packaging
+  #    - Stage 2 (Runtime): Minimal JRE image with application JAR
+  # 3. Layer caching for faster subsequent builds
+  #
+  # Versioning:
+  # - Semantic version: v1.0.<build_number>-<commit_sha>
+  # - Latest tag for easy updates
+  #
+  # Registry: Docker Hub (smamm/ecommerce-*)
+  # ═══════════════════════════════════════════════════════════════════════════
+  docker-build-push:
+    name: Docker Build & Push
+    needs: [detect-changes, build-test-services]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: ${{fromJson(needs.detect-changes.outputs.services)}}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Generate Version Tags
+        id: version
+        run: |
+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+          VERSION_TAG="v1.0.${GITHUB_RUN_NUMBER}-${SHORT_SHA}"
+          echo "version=$VERSION_TAG" >> $GITHUB_OUTPUT
+          echo "sha=$SHORT_SHA" >> $GITHUB_OUTPUT
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./${{ matrix.service }}
+          file: ./${{ matrix.service }}/Dockerfile
+          push: true
+          tags: |
+            ${{ env.DOCKER_USERNAME }}/ecommerce-${{ matrix.service }}:${{ steps.version.outputs.version }}
+            ${{ env.DOCKER_USERNAME }}/ecommerce-${{ matrix.service }}:latest
+          cache-from: type=registry,ref=${{ env.DOCKER_USERNAME }}/ecommerce-${{ matrix.service }}:buildcache
+          cache-to: type=registry,ref=${{ env.DOCKER_USERNAME }}/ecommerce-${{ matrix.service }}:buildcache,mode=max
+          build-args: |
+            BUILD_DATE=${{ github.event.head_commit.timestamp }}
+            VCS_REF=${{ github.sha }}
+            VERSION=${{ steps.version.outputs.version }}
+
+      - name: Image Published
+        run: |
+          echo "✅ Published: ${{ env.DOCKER_USERNAME }}/ecommerce-${{ matrix.service }}:${{ steps.version.outputs.version }}"
+          echo "✅ Latest: ${{ env.DOCKER_USERNAME }}/ecommerce-${{ matrix.service }}:latest"
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # FRONTEND DOCKER - Builds and pushes frontend Nginx image
+  # ═══════════════════════════════════════════════════════════════════════════
+  docker-frontend:
+    name: Docker Frontend
+    needs: [detect-changes, build-frontend]
+    if: needs.detect-changes.outputs.has-frontend-changes == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Generate Version
+        id: version
+        run: |
+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+          echo "tag=v1.0.${GITHUB_RUN_NUMBER}-${SHORT_SHA}" >> $GITHUB_OUTPUT
+
+      - name: Build and Push Frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          tags: |
+            ${{ env.DOCKER_USERNAME }}/ecommerce-frontend:${{ steps.version.outputs.tag }}
+            ${{ env.DOCKER_USERNAME }}/ecommerce-frontend:latest
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # DEPLOYMENT SUMMARY - Creates deployment notes
+  # ═══════════════════════════════════════════════════════════════════════════
+  deployment-summary:
+    name: Create Deployment Summary
+    needs: [docker-build-push, docker-frontend]
+    if: always() && github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Generate Summary
+        run: |
+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+          VERSION="v1.0.${GITHUB_RUN_NUMBER}-${SHORT_SHA}"
+
+          echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** \`$VERSION\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Triggered by:** @${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📦 Published Images" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "All changed services have been built and pushed to Docker Hub:" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+          echo "# Pull specific version" >> $GITHUB_STEP_SUMMARY
+          echo "docker pull smamm/ecommerce-<service>:$VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "# Pull latest" >> $GITHUB_STEP_SUMMARY
+          echo "docker pull smamm/ecommerce-<service>:latest" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔄 To Deploy" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
+          echo "# Update images" >> $GITHUB_STEP_SUMMARY
+          echo "docker-compose --profile full pull" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "# Restart services" >> $GITHUB_STEP_SUMMARY
+          echo "docker-compose --profile full up -d" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # STATUS CHECK - Final pipeline status
+  # ═══════════════════════════════════════════════════════════════════════════
+  pipeline-status:
+    name: Pipeline Status
+    needs: [build-test-services, docker-build-push]
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check Status
+        run: |
+          if [ "${{ needs.build-test-services.result }}" == "success" ]; then
+            echo "✅ Build & Test: SUCCESS"
+          else
+            echo "❌ Build & Test: FAILED"
+            exit 1
+          fi
+
+          if [ "${{ github.event_name }}" == "push" ] && [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            if [ "${{ needs.docker-build-push.result }}" == "success" ]; then
+              echo "✅ Docker Build & Push: SUCCESS"
+            else
+              echo "❌ Docker Build & Push: FAILED"
+              exit 1
+            fi
+          fi
+
+          echo "🎉 CI/CD Pipeline completed successfully!"

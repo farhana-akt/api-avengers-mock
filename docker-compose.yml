@@ -169,12 +169,16 @@ services:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
       - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
     volumes:
       - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
     networks:
       - microservices-network
     depends_on:
       - prometheus
+      - loki
+      - zipkin
     restart: unless-stopped
 
   # Loki - Log Aggregation
@@ -184,6 +188,9 @@ services:
     profiles: ["monitoring", "full"]
     ports:
       - "3100:3100"
+    volumes:
+      - ./loki-config.yml:/etc/loki/local-config.yaml
+      - loki-data:/tmp/loki
     command: -config.file=/etc/loki/local-config.yaml
     networks:
       - microservices-network
@@ -195,7 +202,8 @@ services:
     container_name: promtail
     profiles: ["monitoring", "full"]
     volumes:
-      - /var/log:/var/log
+      - /var/log:/var/log:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./promtail-config.yml:/etc/promtail/config.yml
     command: -config.file=/etc/promtail/config.yml
     networks:
@@ -527,3 +535,5 @@ volumes:
     name: ecommerce-prometheus-data
   grafana-data:
     name: ecommerce-grafana-data
+  loki-data:
+    name: ecommerce-loki-data

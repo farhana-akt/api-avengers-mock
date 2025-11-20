@@ -397,9 +397,11 @@ Test coverage includes:
 - **OrderService**: Order creation, saga pattern, circuit breaker, cancellation
 - **CartService**: Add/remove items, quantity updates, cart expiration
 
-### Load Testing (K6)
+### Load Testing (K6) 🆕
 
-K6 load tests simulate realistic user traffic.
+> **New Feature**: Comprehensive K6 load testing with realistic user scenarios
+
+K6 load tests simulate realistic user traffic with gradual ramp-up.
 
 #### Install K6
 
@@ -407,58 +409,42 @@ K6 load tests simulate realistic user traffic.
 # macOS
 brew install k6
 
-# Linux
-sudo gpg -k
-sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
-echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
-sudo apt-get update
-sudo apt-get install k6
-
-# Windows (via Chocolatey)
-choco install k6
+# Linux/Windows - see: https://k6.io/docs/get-started/installation/
 ```
 
 #### Run Load Tests
 
 ```bash
-# Test order flow (ramps up to 50 users)
-k6 run k6/load-test-orders.js
+# Comprehensive load test (recommended)
+./scripts/run-load-test.sh
 
-# Test product browsing (ramps up to 100 users)
-k6 run k6/load-test-products.js
-
-# Test authentication (ramps up to 60 users)
-k6 run k6/load-test-auth.js
-
-# Test complete flow (comprehensive test)
-k6 run k6/load-test-full-flow.js
+# Test scenarios:
+# - 30% User login
+# - 40% Product browsing
+# - 30% Complete purchase flow
+# Ramps from 10 → 50 → 100 users over 7 minutes
 ```
 
-#### Custom K6 Parameters
+#### Monitor During Load Test
 
-```bash
-# Run with custom duration and users
-k6 run --vus 100 --duration 5m k6/load-test-products.js
+1. Start Grafana: http://localhost:3000 (admin/admin)
+2. Open "Microservices Overview" dashboard
+3. Run load test in another terminal
+4. Watch metrics in real-time:
+   - Request rates increasing
+   - Response times (target: P95 < 500ms)
+   - Success rate (target: > 99%)
+   - CPU & memory usage
+   - GC activity
 
-# Set custom base URL
-BASE_URL=http://staging.example.com k6 run k6/load-test-orders.js
+#### Expected Performance
+
 ```
-
-#### Understanding K6 Output
-
-```
-scenarios: (100.00%) 1 scenario, 50 max VUs, 2m30s max duration
-✓ registration successful
-✓ products loaded
-✓ product added to cart
-✓ cart retrieved
-✓ order placed
-
-checks.........................: 95.23% ✓ 1523      ✗ 76
-data_received..................: 2.3 MB 45 kB/s
-data_sent......................: 1.1 MB 22 kB/s
-http_req_duration..............: avg=245ms min=12ms med=198ms max=1.2s p(95)=523ms
-http_reqs......................: 3245   64.9/s
+✅ P95 response time < 500ms
+✅ P99 response time < 1s
+✅ Success rate > 99%
+✅ No service failures
+✅ Stable memory (no leaks)
 ```
 
 ---
@@ -502,39 +488,36 @@ const API_BASE_URL = 'http://localhost:8080/api';
 
 ---
 
-## Database Mock Data
+## Database Mock Data 🆕
 
-Pre-populated sample data for testing.
+> **New Feature**: Automated mock data population with 50 products and realistic inventory
+
+Pre-populated sample data for testing and demos.
 
 ### Load Mock Data
 
 ```bash
-# Load products (50 diverse products)
-docker exec -i postgres-product psql -U postgres -d productdb < database/init/products.sql
-
-# Load inventory (stock for all products)
-docker exec -i postgres-inventory psql -U postgres -d inventorydb < database/init/inventory.sql
-
-# Load users (10 sample users)
-docker exec -i postgres-user psql -U postgres -d userdb < database/init/users.sql
+# Automated script (recommended)
+./scripts/populate-databases.sh
 ```
+
+This loads:
+- **50 Products** across 5 categories (Electronics, Fashion, Home & Garden, Sports, Books)
+- **50 Inventory records** with varying stock levels (high/medium/low stock scenarios)
 
 ### Sample Data Contents
 
-**Products** (50 items across 5 categories):
-- Electronics: Laptops, phones, cameras, monitors
-- Clothing: Shoes, jeans, jackets, accessories
-- Books: Programming, self-help, fiction
-- Home & Kitchen: Appliances, smart home devices
-- Sports: Fitness equipment, camping gear
+**Categories** (10 products each):
+- **Electronics**: Laptops, phones, keyboards, monitors, SSDs
+- **Fashion**: T-shirts, jeans, shoes, watches, accessories
+- **Home & Garden**: Coffee makers, air purifiers, cookware
+- **Sports**: Yoga mats, dumbbells, resistance bands
+- **Books**: Novels, programming books, cookbooks
 
-**Users** (10 users, password: `password123`):
-- admin@ecommerce.com (ADMIN role)
-- john.doe@example.com (CUSTOMER)
-- jane.smith@example.com (CUSTOMER)
-- ... and 7 more customers
-
-**Inventory**: Stock levels for all products (ranging from 10-250 units)
+**Inventory Scenarios**:
+- High stock items (500+ units) - for stress testing
+- Medium stock (100-300 units) - typical availability
+- Low stock (< 100 units) - scarcity scenarios
 
 ### Direct Database Access
 
@@ -553,93 +536,137 @@ SELECT * FROM inventory WHERE available_quantity < 50;
 
 ---
 
-## Monitoring & Observability
+## Monitoring & Observability 🆕
 
-### Zipkin (Distributed Tracing)
+> **New Feature**: Pre-configured Grafana dashboards with Prometheus, Loki, and Zipkin integration
 
-**URL**: http://localhost:9411
+Complete observability stack with automatic configuration.
 
-**Usage**:
-1. Open Zipkin UI
-2. Click "Run Query" to see recent traces
-3. Click on a trace to see the full request path
-4. Analyze latency across services
-5. Identify bottlenecks
+### Quick Access
 
-**Key Features**:
-- See complete request journey across all services
-- Latency breakdown per service
-- Dependency graph
+| Tool | URL | Credentials | Purpose |
+|------|-----|-------------|---------|
+| **Grafana** | http://localhost:3000 | admin/admin | Dashboards & visualization |
+| **Zipkin** | http://localhost:9411 | - | Distributed tracing |
+| **Prometheus** | http://localhost:9090 | - | Metrics & queries |
+| **Loki** | http://localhost:3100 | - | Log aggregation |
+| **RabbitMQ** | http://localhost:15672 | admin/admin | Message queue management |
+| **Eureka** | http://localhost:8761 | - | Service discovery |
+
+### Grafana Dashboards (Pre-configured) 🆕
+
+Grafana starts with **3 datasources** and **2 dashboards** automatically configured:
+
+#### 1. Microservices Overview Dashboard
+**What it shows:**
+- Services up/down status
+- Request rates by service
+- Response times (P95, P99)
+- Success rates
+- CPU & memory usage
+- JVM heap metrics
+
+**When to use:** System health monitoring, load test observation
+
+#### 2. JVM Metrics Dashboard
+**What it shows:**
+- Memory usage (heap/non-heap)
+- GC rate & pause duration
+- Thread count
+- Per-service breakdown
+
+**When to use:** Performance tuning, memory leak detection
+
+**Access:** Dashboards → Browse → Select dashboard
+
+### Zipkin (Distributed Tracing) 🆕
+
+> **Improvement**: All logs now include trace IDs for correlation
+
+**Quick start:**
+1. Open http://localhost:9411
+2. Click "Run Query"
+3. Click any trace to see full request flow
+4. Identify slow services and bottlenecks
+
+**Features:**
+- Complete request journey across services
+- Latency breakdown per span
+- Dependency visualization
 - Error tracking
+
+**Trace ID in logs:**
+```
+INFO [user-service,a3f2e1c4d5b6,1234567890ab] - User logged in
+                    ↑           ↑
+                 TraceID      SpanID
+```
+
+### Loki (Log Aggregation) 🆕
+
+> **New Feature**: Centralized logs from all Docker containers
+
+**Access via Grafana:**
+1. Go to Explore (compass icon)
+2. Select "Loki" datasource
+3. Use LogQL queries
+
+**Sample queries:**
+```logql
+# All logs from user-service
+{container="user-service"}
+
+# Errors only
+{container=~".*-service"} |= "ERROR"
+
+# Logs for specific trace
+{container="user-service"} |= "traceId=a3f2e1c"
+
+# Last 5 minutes, filtered
+{container="order-service"} | json | level="ERROR" [5m]
+```
 
 ### Prometheus (Metrics)
 
-**URL**: http://localhost:9090
-
-**Usage**:
-1. Open Prometheus UI
-2. Go to "Graph" tab
-3. Enter PromQL queries
-4. View metrics graphs
-
-**Sample Queries**:
+**Useful queries:**
 ```promql
-# Request rate
-rate(http_server_requests_seconds_count[1m])
+# Request rate per service
+rate(http_server_requests_seconds_count{job=~".*-service"}[5m])
+
+# 95th percentile response time
+histogram_quantile(0.95,
+  sum(rate(http_server_requests_seconds_bucket[5m])) by (le, application)
+)
 
 # Error rate
-rate(http_server_requests_seconds_count{status="500"}[1m])
-
-# 95th percentile latency
-histogram_quantile(0.95, rate(http_server_requests_seconds_bucket[5m]))
+sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m])) by (application)
 
 # JVM memory usage
-jvm_memory_used_bytes
+jvm_memory_used_bytes{area="heap"}
 
-# Active connections
-hikaricp_connections_active
+# Success rate by service
+100 * (
+  sum(rate(http_server_requests_seconds_count{status!~"5.."}[5m])) by (application)
+  /
+  sum(rate(http_server_requests_seconds_count[5m])) by (application)
+)
 ```
 
-### Grafana (Dashboards)
+### RabbitMQ (Event-Driven Architecture)
 
-**URL**: http://localhost:3000
-**Login**: admin / admin
+**Monitor message flow:**
+1. Open http://localhost:15672 (admin/admin)
+2. Check "Queues" tab for:
+   - Order events
+   - Payment events
+   - Notification events
+3. Verify consumers are connected
+4. Monitor message rates
 
-**Usage**:
-1. Login with admin/admin
-2. Go to "Dashboards"
-3. View pre-configured dashboards
-4. Create custom dashboards
-
-**Available Dashboards**:
-- Spring Boot Statistics
-- JVM Metrics
-- Database Connection Pools
-- HTTP Request Metrics
-
-**Creating Custom Dashboard**:
-1. Click "+ Create Dashboard"
-2. Add Panel
-3. Select Prometheus as data source
-4. Write PromQL query
-5. Configure visualization
-
-### RabbitMQ (Message Queue)
-
-**URL**: http://localhost:15672
-**Login**: admin / admin
-
-**Usage**:
-1. Login to management console
-2. View "Queues" tab
-3. Monitor message rates
-4. Check consumer status
-
-**Key Metrics**:
-- Message rate (in/out)
-- Queue depth
-- Consumer count
-- Unacknowledged messages
+**Key events:**
+- `order.created` → Payment Service
+- `payment.success` → Order Service, Notification Service
+- `payment.failed` → Order Service (triggers saga rollback)
 
 ---
 
