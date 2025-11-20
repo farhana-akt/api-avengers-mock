@@ -53,7 +53,7 @@ public class OrderService {
     @Transactional
     @CircuitBreaker(name = "orderService", fallbackMethod = "createOrderFallback")
     public OrderResponse createOrder(Long userId, String userEmail) {
-        logger.info("Creating order for user: {}", userId);
+        logger.info("Processing order creation for user: {}", userId);
 
         // Step 1: Get cart items
         CartDTO cart = cartClient.getCart(userId.toString());

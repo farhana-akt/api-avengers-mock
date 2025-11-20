@@ -51,7 +51,7 @@ public class InventoryService {
      * Check if product is in stock
      */
     public boolean isInStock(Long productId, Integer quantity) {
-        logger.info("Checking stock availability for product {} (quantity: {})", productId, quantity);
+        logger.info("Verifying stock availability for product {} (quantity: {})", productId, quantity);
 
         Inventory inventory = inventoryRepository.findByProductId(productId)
             .orElse(null);

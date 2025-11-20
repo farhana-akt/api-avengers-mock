@@ -30,7 +30,7 @@ public class ProductService {
      * Get all active products
      */
     public List<ProductResponse> getAllProducts() {
-        logger.info("Fetching all active products");
+        logger.info("Fetching all active products from catalog");
         return productRepository.findByActiveTrue()
             .stream()
             .map(ProductResponse::fromEntity)

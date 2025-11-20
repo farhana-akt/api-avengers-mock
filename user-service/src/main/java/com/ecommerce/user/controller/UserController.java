@@ -33,6 +33,7 @@ public class UserController {
     @GetMapping("/profile")
     public ResponseEntity<?> getProfile(@RequestHeader("X-User-Id") String userId) {
         try {
+            logger.debug("Fetching profile for user ID: {}", userId);
             UserResponse response = userService.getUserById(Long.parseLong(userId));
             return ResponseEntity.ok(response);
         } catch (Exception e) {
