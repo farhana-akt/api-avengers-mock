@@ -40,7 +40,7 @@ class CartServiceTest {
 
     @BeforeEach
     void setUp() {
-        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        lenient().when(redisTemplate.opsForValue()).thenReturn(valueOperations);
 
         testCart = new Cart();
         testCart.setUserId(userId);

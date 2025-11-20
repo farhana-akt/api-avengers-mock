@@ -75,7 +75,7 @@ public class UserController {
         Map<String, String> response = new HashMap<>();
         response.put("service", "user-service");
         response.put("version", "1.0.0");
-        response.put("build", "2025-11-20");
+        response.put("build", "2025-11-21");
         logger.info("Version endpoint called");
         return ResponseEntity.ok(response);
     }
