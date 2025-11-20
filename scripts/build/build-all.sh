@@ -6,7 +6,7 @@
 set -e
 
 # Navigate to project root
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/../.."
 
 echo "========================================="
 echo "Building All Microservices with Docker"
@@ -61,7 +61,7 @@ echo -e "${GREEN}All services built successfully!${NC}"
 echo "========================================="
 echo ""
 echo "Next steps:"
-echo "1. Run: ./scripts/quick-start.sh"
+echo "1. Run: ./scripts/build/quick-start.sh"
 echo "   OR"
 echo "   Run: docker-compose --profile full up -d"
 echo ""

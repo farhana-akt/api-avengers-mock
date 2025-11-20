@@ -79,7 +79,7 @@ git clone <repository-url>
 cd api-avengers-mock
 
 # Build and start everything
-./scripts/quick-start.sh
+./scripts/build/quick-start.sh
 ```
 
 This script will:
@@ -92,7 +92,7 @@ This script will:
 
 ```bash
 # Build all services
-./scripts/build-all.sh
+./scripts/build/build-all.sh
 
 # Start Docker Compose
 docker-compose up -d
@@ -132,7 +132,7 @@ docker-compose logs -f
 
 ```bash
 # Stop all services
-./scripts/stop-all.sh
+./scripts/build/stop-all.sh
 
 # Or manually
 docker-compose down
@@ -193,7 +193,7 @@ http://localhost:8080/api/payments/*   → Payment Service
 
 Run the automated test script:
 ```bash
-./scripts/test-api.sh
+./scripts/test/test-api.sh
 ```
 
 Or follow these manual steps:
@@ -382,7 +382,7 @@ All services have comprehensive Mockito unit tests covering:
 Run tests:
 ```bash
 # Test all services
-./scripts/test-all.sh
+./scripts/test/test-all.sh
 
 # Test specific service
 cd user-service && mvn test
@@ -416,7 +416,7 @@ brew install k6
 
 ```bash
 # Comprehensive load test (recommended)
-./scripts/run-load-test.sh
+./scripts/test/run-load-test.sh
 
 # Test scenarios:
 # - 30% User login
@@ -498,7 +498,7 @@ Pre-populated sample data for testing and demos.
 
 ```bash
 # Automated script (recommended)
-./scripts/populate-databases.sh
+./scripts/test/populate-databases.sh
 ```
 
 This loads:
@@ -788,7 +788,7 @@ docker system prune -a -f
 rm -rf */target
 
 # Rebuild everything
-./scripts/build-all.sh
+./scripts/build/build-all.sh
 docker-compose up -d --build
 ```
 
