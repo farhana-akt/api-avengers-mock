@@ -45,8 +45,10 @@ echo -e "${BLUE}Cleaning up ports...${NC}"
 ports=(3001 8080 8081 8082 8083 8084 8085 8086 8087 8761 8888 5432 5433 5434 5435 6379 5672 15672 9411 9090 3000 3100)
 
 for port in "${ports[@]}"; do
-    kill_port $port
+    kill_port $port &
 done
+wait
+echo -e "${GREEN}Ports cleaned${NC}"
 echo ""
 
 # Build all services with Docker
