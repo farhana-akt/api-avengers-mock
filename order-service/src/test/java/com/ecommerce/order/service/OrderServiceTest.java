@@ -6,6 +6,7 @@ import com.ecommerce.order.client.PaymentClient;
 import com.ecommerce.order.config.RabbitMQConfig;
 import com.ecommerce.order.dto.*;
 import com.ecommerce.order.entity.Order;
+import com.ecommerce.order.entity.OrderItem;
 import com.ecommerce.order.event.OrderEvent;
 import com.ecommerce.order.repository.OrderRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -85,6 +86,23 @@ class OrderServiceTest {
         testOrder.setUserId(userId);
         testOrder.setStatus(Order.OrderStatus.PENDING);
         testOrder.setTotalAmount(new BigDecimal("250.00"));
+
+        // Add order items to testOrder
+        OrderItem orderItem1 = new OrderItem();
+        orderItem1.setProductId(101L);
+        orderItem1.setProductName("Product 1");
+        orderItem1.setPrice(new BigDecimal("100.00"));
+        orderItem1.setQuantity(2);
+        orderItem1.setSubtotal(new BigDecimal("200.00"));
+        testOrder.addItem(orderItem1);
+
+        OrderItem orderItem2 = new OrderItem();
+        orderItem2.setProductId(102L);
+        orderItem2.setProductName("Product 2");
+        orderItem2.setPrice(new BigDecimal("50.00"));
+        orderItem2.setQuantity(1);
+        orderItem2.setSubtotal(new BigDecimal("50.00"));
+        testOrder.addItem(orderItem2);
 
         // Setup payment responses
         successPaymentResponse = new PaymentResponse();
@@ -256,7 +274,6 @@ class OrderServiceTest {
         testOrder.setStatus(Order.OrderStatus.PENDING);
         when(orderRepository.findById(1L)).thenReturn(Optional.of(testOrder));
         when(orderRepository.save(any(Order.class))).thenReturn(testOrder);
-        doNothing().when(inventoryClient).releaseStock(any(ReserveStockRequest.class));
 
         // Act
         OrderResponse response = orderService.cancelOrder(1L, userId);
