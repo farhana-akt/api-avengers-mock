@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -138,6 +139,77 @@ public class ProductController {
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             logger.error("Failed to delete product: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(errorResponse(e.getMessage()));
+        }
+    }
+
+    /**
+     * Get products by brand
+     */
+    @GetMapping("/brand/{brand}")
+    public ResponseEntity<List<ProductResponse>> getProductsByBrand(@PathVariable String brand) {
+        List<ProductResponse> products = productService.getProductsByBrand(brand);
+        return ResponseEntity.ok(products);
+    }
+
+    /**
+     * Get products by price range
+     * Example: /api/products/price-range?min=10.00&max=100.00
+     */
+    @GetMapping("/price-range")
+    public ResponseEntity<?> getProductsByPriceRange(
+        @RequestParam BigDecimal min,
+        @RequestParam BigDecimal max
+    ) {
+        try {
+            List<ProductResponse> products = productService.getProductsByPriceRange(min, max);
+            return ResponseEntity.ok(products);
+        } catch (IllegalArgumentException e) {
+            logger.error("Invalid price range: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(errorResponse(e.getMessage()));
+        }
+    }
+
+    /**
+     * Get products by category and price range
+     * Example: /api/products/filter/Electronics?min=100&max=500
+     */
+    @GetMapping("/filter/{category}")
+    public ResponseEntity<?> getProductsByCategoryAndPriceRange(
+        @PathVariable String category,
+        @RequestParam BigDecimal min,
+        @RequestParam BigDecimal max
+    ) {
+        try {
+            List<ProductResponse> products = productService.getProductsByCategoryAndPriceRange(
+                category, min, max
+            );
+            return ResponseEntity.ok(products);
+        } catch (IllegalArgumentException e) {
+            logger.error("Invalid filter parameters: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(errorResponse(e.getMessage()));
+        }
+    }
+
+    /**
+     * Advanced search with multiple optional filters
+     * Example: /api/products/advanced-search?category=Electronics&brand=Sony&minPrice=100&maxPrice=500
+     * All parameters are optional
+     */
+    @GetMapping("/advanced-search")
+    public ResponseEntity<?> advancedSearch(
+        @RequestParam(required = false) String category,
+        @RequestParam(required = false) String brand,
+        @RequestParam(required = false) BigDecimal minPrice,
+        @RequestParam(required = false) BigDecimal maxPrice
+    ) {
+        try {
+            List<ProductResponse> products = productService.searchWithFilters(
+                category, brand, minPrice, maxPrice
+            );
+            return ResponseEntity.ok(products);
+        } catch (IllegalArgumentException e) {
+            logger.error("Invalid search parameters: {}", e.getMessage());
             return ResponseEntity.badRequest().body(errorResponse(e.getMessage()));
         }
     }
