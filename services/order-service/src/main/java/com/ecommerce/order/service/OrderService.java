@@ -129,14 +129,12 @@ public class OrderService {
 
                 logger.info("Order completed successfully: {}", order.getId());
             } else {
-                // Payment failed - rollback inventory
+                // Payment failed
                 logger.error("Payment failed for order: {}", order.getId());
                 order.setStatus(Order.OrderStatus.PAYMENT_FAILED);
                 orderRepository.save(order);
 
-                // Release reserved inventory
-                releaseInventory(order);
-
+                // Throw exception - inventory will be released in catch block
                 throw new RuntimeException("Payment failed: " + paymentResponse.getMessage());
             }
 
