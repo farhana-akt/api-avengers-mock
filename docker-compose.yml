@@ -1,12 +1,30 @@
 version: '3.8'
 
-services:
-  # ==================== INFRASTRUCTURE ====================
+# ==============================================================================
+# E-COMMERCE MICROSERVICES PLATFORM - DOCKER COMPOSE
+# ==============================================================================
+# Groups:
+#   - databases: PostgreSQL databases + Redis
+#   - monitoring: Zipkin, Prometheus, Grafana, Loki, Promtail
+#   - infrastructure: Eureka, Config Server, API Gateway, RabbitMQ
+#   - microservices: All business logic services
+#
+# Usage:
+#   - Start all: docker-compose up -d
+#   - Start specific groups: docker-compose --profile databases --profile microservices up -d
+#   - Stop all: docker-compose down
+# ==============================================================================
 
-  # PostgreSQL Databases (One per service)
+services:
+  # ============================================================================
+  # DATABASE GROUP
+  # ============================================================================
+
+  # PostgreSQL - User Database
   postgres-user:
     image: postgres:14-alpine
     container_name: postgres-user
+    profiles: ["databases", "full"]
     environment:
       POSTGRES_DB: userdb
       POSTGRES_USER: postgres
@@ -22,10 +40,13 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
+  # PostgreSQL - Product Database
   postgres-product:
     image: postgres:14-alpine
     container_name: postgres-product
+    profiles: ["databases", "full"]
     environment:
       POSTGRES_DB: productdb
       POSTGRES_USER: postgres
@@ -41,10 +62,13 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
+  # PostgreSQL - Order Database
   postgres-order:
     image: postgres:14-alpine
     container_name: postgres-order
+    profiles: ["databases", "full"]
     environment:
       POSTGRES_DB: orderdb
       POSTGRES_USER: postgres
@@ -60,10 +84,13 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
+  # PostgreSQL - Inventory Database
   postgres-inventory:
     image: postgres:14-alpine
     container_name: postgres-inventory
+    profiles: ["databases", "full"]
     environment:
       POSTGRES_DB: inventorydb
       POSTGRES_USER: postgres
@@ -79,11 +106,13 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
-  # Redis for Cart Service
+  # Redis - Cart Cache
   redis:
     image: redis:7-alpine
     container_name: redis-cart
+    profiles: ["databases", "full"]
     ports:
       - "6379:6379"
     networks:
@@ -93,42 +122,30 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
-  # RabbitMQ for Event-Driven Communication
-  rabbitmq:
-    image: rabbitmq:3.12-management-alpine
-    container_name: rabbitmq
-    ports:
-      - "5672:5672"   # AMQP
-      - "15672:15672" # Management UI
-    environment:
-      RABBITMQ_DEFAULT_USER: admin
-      RABBITMQ_DEFAULT_PASS: admin
-    networks:
-      - microservices-network
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+  # ============================================================================
+  # MONITORING & OBSERVABILITY GROUP
+  # ============================================================================
 
-  # ==================== OBSERVABILITY ====================
-
-  # Zipkin for Distributed Tracing
+  # Zipkin - Distributed Tracing
   zipkin:
     image: openzipkin/zipkin:latest
     container_name: zipkin
+    profiles: ["monitoring", "full"]
     ports:
       - "9411:9411"
     networks:
       - microservices-network
     environment:
       - STORAGE_TYPE=mem
+    restart: unless-stopped
 
-  # Prometheus for Metrics Collection
+  # Prometheus - Metrics Collection
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
+    profiles: ["monitoring", "full"]
     ports:
       - "9090:9090"
     volumes:
@@ -139,11 +156,13 @@ services:
       - '--storage.tsdb.path=/prometheus'
     networks:
       - microservices-network
+    restart: unless-stopped
 
-  # Grafana for Dashboards
+  # Grafana - Visualization & Dashboards
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
+    profiles: ["monitoring", "full"]
     ports:
       - "3000:3000"
     environment:
@@ -156,21 +175,25 @@ services:
       - microservices-network
     depends_on:
       - prometheus
+    restart: unless-stopped
 
-  # Loki for Log Aggregation
+  # Loki - Log Aggregation
   loki:
     image: grafana/loki:latest
     container_name: loki
+    profiles: ["monitoring", "full"]
     ports:
       - "3100:3100"
     command: -config.file=/etc/loki/local-config.yaml
     networks:
       - microservices-network
+    restart: unless-stopped
 
-  # Promtail for Log Collection
+  # Promtail - Log Collection
   promtail:
     image: grafana/promtail:latest
     container_name: promtail
+    profiles: ["monitoring", "full"]
     volumes:
       - /var/log:/var/log
       - ./promtail-config.yml:/etc/promtail/config.yml
@@ -179,8 +202,11 @@ services:
       - microservices-network
     depends_on:
       - loki
+    restart: unless-stopped
 
-  # ==================== SPRING CLOUD INFRASTRUCTURE ====================
+  # ============================================================================
+  # INFRASTRUCTURE GROUP (Spring Cloud + Message Queue)
+  # ============================================================================
 
   # Eureka Server - Service Discovery
   eureka-server:
@@ -188,6 +214,7 @@ services:
       context: ./eureka-server
       dockerfile: Dockerfile
     container_name: eureka-server
+    profiles: ["infrastructure", "full"]
     ports:
       - "8761:8761"
     networks:
@@ -197,8 +224,10 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
+      start_period: 40s
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+    restart: unless-stopped
 
   # Config Server - Centralized Configuration
   config-server:
@@ -206,6 +235,7 @@ services:
       context: ./config-server
       dockerfile: Dockerfile
     container_name: config-server
+    profiles: ["infrastructure", "full"]
     ports:
       - "8888:8888"
     networks:
@@ -214,13 +244,15 @@ services:
       eureka-server:
         condition: service_healthy
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_PROFILES_ACTIVE=docker,native
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8888/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5
+      start_period: 40s
+    restart: unless-stopped
 
   # API Gateway - Entry Point with JWT Validation
   api-gateway:
@@ -228,6 +260,7 @@ services:
       context: ./api-gateway
       dockerfile: Dockerfile
     container_name: api-gateway
+    profiles: ["infrastructure", "full"]
     ports:
       - "8080:8080"
     networks:
@@ -243,8 +276,46 @@ services:
       - SPRING_CLOUD_CONFIG_URI=http://config-server:8888
       - ZIPKIN_BASE_URL=http://zipkin:9411
       - JWT_SECRET=mySecretKeyForJWTTokenGenerationAndValidation12345678
+    restart: unless-stopped
 
-  # ==================== MICROSERVICES ====================
+  # Frontend - Web UI
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    profiles: ["infrastructure", "full"]
+    ports:
+      - "3001:80"
+    networks:
+      - microservices-network
+    depends_on:
+      - api-gateway
+    restart: unless-stopped
+
+  # RabbitMQ - Event-Driven Communication
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: rabbitmq
+    profiles: ["infrastructure", "full"]
+    ports:
+      - "5672:5672"   # AMQP
+      - "15672:15672" # Management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ============================================================================
+  # MICROSERVICES GROUP (Business Logic Services)
+  # ============================================================================
 
   # User Service - Authentication & User Management
   user-service:
@@ -252,6 +323,7 @@ services:
       context: ./user-service
       dockerfile: Dockerfile
     container_name: user-service
+    profiles: ["microservices", "full"]
     ports:
       - "8081:8081"
     networks:
@@ -269,6 +341,7 @@ services:
       - SPRING_DATASOURCE_PASSWORD=postgres
       - ZIPKIN_BASE_URL=http://zipkin:9411
       - JWT_SECRET=mySecretKeyForJWTTokenGenerationAndValidation12345678
+    restart: unless-stopped
 
   # Product Service - Product Catalog
   product-service:
@@ -276,6 +349,7 @@ services:
       context: ./product-service
       dockerfile: Dockerfile
     container_name: product-service
+    profiles: ["microservices", "full"]
     ports:
       - "8082:8082"
     networks:
@@ -292,6 +366,7 @@ services:
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=postgres
       - ZIPKIN_BASE_URL=http://zipkin:9411
+    restart: unless-stopped
 
   # Inventory Service - Stock Management
   inventory-service:
@@ -299,6 +374,7 @@ services:
       context: ./inventory-service
       dockerfile: Dockerfile
     container_name: inventory-service
+    profiles: ["microservices", "full"]
     ports:
       - "8083:8083"
     networks:
@@ -315,6 +391,7 @@ services:
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=postgres
       - ZIPKIN_BASE_URL=http://zipkin:9411
+    restart: unless-stopped
 
   # Cart Service - Shopping Cart with Redis
   cart-service:
@@ -322,6 +399,7 @@ services:
       context: ./cart-service
       dockerfile: Dockerfile
     container_name: cart-service
+    profiles: ["microservices", "full"]
     ports:
       - "8084:8084"
     networks:
@@ -337,13 +415,15 @@ services:
       - SPRING_REDIS_HOST=redis
       - SPRING_REDIS_PORT=6379
       - ZIPKIN_BASE_URL=http://zipkin:9411
+    restart: unless-stopped
 
-  # Order Service - Order Orchestration
+  # Order Service - Order Orchestration with Saga Pattern
   order-service:
     build:
       context: ./order-service
       dockerfile: Dockerfile
     container_name: order-service
+    profiles: ["microservices", "full"]
     ports:
       - "8085:8085"
     networks:
@@ -366,13 +446,15 @@ services:
       - SPRING_RABBITMQ_USERNAME=admin
       - SPRING_RABBITMQ_PASSWORD=admin
       - ZIPKIN_BASE_URL=http://zipkin:9411
+    restart: unless-stopped
 
-  # Payment Service - Payment Processing with Circuit Breaker
+  # Payment Service - Payment Processing
   payment-service:
     build:
       context: ./payment-service
       dockerfile: Dockerfile
     container_name: payment-service
+    profiles: ["microservices", "full"]
     ports:
       - "8086:8086"
     networks:
@@ -390,6 +472,7 @@ services:
       - SPRING_RABBITMQ_USERNAME=admin
       - SPRING_RABBITMQ_PASSWORD=admin
       - ZIPKIN_BASE_URL=http://zipkin:9411
+    restart: unless-stopped
 
   # Notification Service - Email/SMS Notifications
   notification-service:
@@ -397,6 +480,7 @@ services:
       context: ./notification-service
       dockerfile: Dockerfile
     container_name: notification-service
+    profiles: ["microservices", "full"]
     ports:
       - "8087:8087"
     networks:
@@ -414,15 +498,32 @@ services:
       - SPRING_RABBITMQ_USERNAME=admin
       - SPRING_RABBITMQ_PASSWORD=admin
       - ZIPKIN_BASE_URL=http://zipkin:9411
+    restart: unless-stopped
 
+# ==============================================================================
+# NETWORKS
+# ==============================================================================
 networks:
   microservices-network:
+    name: ecommerce-network
     driver: bridge
 
+# ==============================================================================
+# VOLUMES
+# ==============================================================================
 volumes:
+  # Database Volumes
   user-data:
+    name: ecommerce-user-data
   product-data:
+    name: ecommerce-product-data
   order-data:
+    name: ecommerce-order-data
   inventory-data:
+    name: ecommerce-inventory-data
+
+  # Monitoring Volumes
   prometheus-data:
+    name: ecommerce-prometheus-data
   grafana-data:
+    name: ecommerce-grafana-data

@@ -102,9 +102,9 @@ class OrderServiceTest {
         // Arrange
         when(cartClient.getCart(anyString())).thenReturn(testCart);
         when(orderRepository.save(any(Order.class))).thenReturn(testOrder);
-        when(inventoryClient.reserveStock(any(ReserveStockRequest.class))).thenReturn(true);
+        doNothing().when(inventoryClient).reserveStock(any(ReserveStockRequest.class));
         when(paymentClient.processPayment(any(PaymentRequest.class))).thenReturn(successPaymentResponse);
-        when(inventoryClient.confirmReservation(any(ReserveStockRequest.class))).thenReturn(true);
+        doNothing().when(inventoryClient).confirmReservation(any(ReserveStockRequest.class));
         doNothing().when(cartClient).clearCart(anyString());
         doNothing().when(rabbitTemplate).convertAndSend(anyString(), anyString(), any(OrderEvent.class));
 
@@ -148,9 +148,9 @@ class OrderServiceTest {
         // Arrange
         when(cartClient.getCart(anyString())).thenReturn(testCart);
         when(orderRepository.save(any(Order.class))).thenReturn(testOrder);
-        when(inventoryClient.reserveStock(any(ReserveStockRequest.class))).thenReturn(true);
+        doNothing().when(inventoryClient).reserveStock(any(ReserveStockRequest.class));
         when(paymentClient.processPayment(any(PaymentRequest.class))).thenReturn(failedPaymentResponse);
-        when(inventoryClient.releaseStock(any(ReserveStockRequest.class))).thenReturn(true);
+        doNothing().when(inventoryClient).releaseStock(any(ReserveStockRequest.class));
 
         // Act & Assert
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
@@ -170,8 +170,7 @@ class OrderServiceTest {
         // Arrange
         when(cartClient.getCart(anyString())).thenReturn(testCart);
         when(orderRepository.save(any(Order.class))).thenReturn(testOrder);
-        when(inventoryClient.reserveStock(any(ReserveStockRequest.class)))
-            .thenThrow(new RuntimeException("Insufficient stock"));
+        doThrow(new RuntimeException("Insufficient stock")).when(inventoryClient).reserveStock(any(ReserveStockRequest.class));
 
         // Act & Assert
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
@@ -257,7 +256,7 @@ class OrderServiceTest {
         testOrder.setStatus(Order.OrderStatus.PENDING);
         when(orderRepository.findById(1L)).thenReturn(Optional.of(testOrder));
         when(orderRepository.save(any(Order.class))).thenReturn(testOrder);
-        when(inventoryClient.releaseStock(any(ReserveStockRequest.class))).thenReturn(true);
+        doNothing().when(inventoryClient).releaseStock(any(ReserveStockRequest.class));
 
         // Act
         OrderResponse response = orderService.cancelOrder(1L, userId);
@@ -306,9 +305,9 @@ class OrderServiceTest {
         // Arrange
         when(cartClient.getCart(anyString())).thenReturn(testCart);
         when(orderRepository.save(any(Order.class))).thenReturn(testOrder);
-        when(inventoryClient.reserveStock(any(ReserveStockRequest.class))).thenReturn(true);
+        doNothing().when(inventoryClient).reserveStock(any(ReserveStockRequest.class));
         when(paymentClient.processPayment(any(PaymentRequest.class))).thenReturn(failedPaymentResponse);
-        when(inventoryClient.releaseStock(any(ReserveStockRequest.class))).thenReturn(true);
+        doNothing().when(inventoryClient).releaseStock(any(ReserveStockRequest.class));
 
         // Act & Assert
         assertThrows(RuntimeException.class, () -> {
