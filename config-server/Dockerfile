@@ -4,11 +4,12 @@
 FROM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /app
 
+# Copy pom.xml and source code
 COPY pom.xml .
-RUN mvn dependency:go-offline -B
-
 COPY src ./src
-RUN mvn clean package -DskipTests
+
+# Build the application
+RUN mvn clean package -DskipTests -B
 
 # Stage 2: Runtime
 FROM eclipse-temurin:21-jre
@@ -22,4 +23,5 @@ EXPOSE 8888
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
   CMD curl -f http://localhost:8888/actuator/health || exit 1
 
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+# Run the application
+ENTRYPOINT ["java", "-jar", "app.jar"]
