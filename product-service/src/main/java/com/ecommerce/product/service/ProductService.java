@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -138,83 +137,6 @@ public class ProductService {
     public List<ProductResponse> getProductsByBrand(String brand) {
         logger.info("Fetching products for brand: {}", brand);
         return productRepository.findByBrandAndActiveTrue(brand)
-            .stream()
-            .map(ProductResponse::fromEntity)
-            .collect(Collectors.toList());
-    }
-
-    /**
-     * Get products within a price range
-     */
-    public List<ProductResponse> getProductsByPriceRange(BigDecimal minPrice, BigDecimal maxPrice) {
-        logger.info("Fetching products with price between {} and {}", minPrice, maxPrice);
-
-        if (minPrice.compareTo(BigDecimal.ZERO) < 0 || maxPrice.compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("Price values must be non-negative");
-        }
-
-        if (minPrice.compareTo(maxPrice) > 0) {
-            throw new IllegalArgumentException("Minimum price cannot be greater than maximum price");
-        }
-
-        return productRepository.findByPriceBetweenAndActiveTrue(minPrice, maxPrice)
-            .stream()
-            .map(ProductResponse::fromEntity)
-            .collect(Collectors.toList());
-    }
-
-    /**
-     * Get products by category within a price range
-     */
-    public List<ProductResponse> getProductsByCategoryAndPriceRange(
-        String category,
-        BigDecimal minPrice,
-        BigDecimal maxPrice
-    ) {
-        logger.info("Fetching products in category '{}' with price between {} and {}",
-            category, minPrice, maxPrice);
-
-        if (minPrice.compareTo(BigDecimal.ZERO) < 0 || maxPrice.compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("Price values must be non-negative");
-        }
-
-        if (minPrice.compareTo(maxPrice) > 0) {
-            throw new IllegalArgumentException("Minimum price cannot be greater than maximum price");
-        }
-
-        return productRepository.findByCategoryAndPriceBetweenAndActiveTrue(
-            category, minPrice, maxPrice
-        )
-            .stream()
-            .map(ProductResponse::fromEntity)
-            .collect(Collectors.toList());
-    }
-
-    /**
-     * Advanced search with multiple optional filters
-     * All parameters are optional (can be null)
-     */
-    public List<ProductResponse> searchWithFilters(
-        String category,
-        String brand,
-        BigDecimal minPrice,
-        BigDecimal maxPrice
-    ) {
-        logger.info("Searching products with filters - category: {}, brand: {}, minPrice: {}, maxPrice: {}",
-            category, brand, minPrice, maxPrice);
-
-        // Validate price range if both prices are provided
-        if (minPrice != null && maxPrice != null) {
-            if (minPrice.compareTo(BigDecimal.ZERO) < 0 || maxPrice.compareTo(BigDecimal.ZERO) < 0) {
-                throw new IllegalArgumentException("Price values must be non-negative");
-            }
-
-            if (minPrice.compareTo(maxPrice) > 0) {
-                throw new IllegalArgumentException("Minimum price cannot be greater than maximum price");
-            }
-        }
-
-        return productRepository.findByFilters(category, brand, minPrice, maxPrice)
             .stream()
             .map(ProductResponse::fromEntity)
             .collect(Collectors.toList());
