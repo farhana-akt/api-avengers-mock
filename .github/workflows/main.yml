@@ -11,7 +11,7 @@ on:
 
 env:
   DOCKER_USERNAME: smamm
-  JAVA_VERSION: '17'
+  JAVA_VERSION: '21'
 
 jobs:
   # Detect which services have changed
