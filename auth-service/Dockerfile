@@ -1,7 +1,7 @@
 # Multi-stage build for Auth Service
 
 # Stage 1: Build
-FROM maven:3.9.5-eclipse-temurin-17 AS build
+FROM maven:3.9.5-eclipse-temurin-21 AS build
 WORKDIR /app
 
 # Copy pom.xml and download dependencies
@@ -13,7 +13,7 @@ COPY src ./src
 RUN mvn clean package -DskipTests
 
 # Stage 2: Runtime
-FROM eclipse-temurin:17-jre
+FROM eclipse-temurin:21-jre
 WORKDIR /app
 
 # Copy JAR from build stage
