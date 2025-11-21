@@ -20,7 +20,7 @@ jobs:
   # STAGE 1: BUILD
   # ============================================================================
   build:
-    name: 🔨 Build ${{ inputs.service-name }}
+    name: Build ${{ inputs.service-name }}
     runs-on: ubuntu-latest
 
     steps:
@@ -34,29 +34,36 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
           cache: 'maven'
 
+      - name: Extract Service Name
+        id: service
+        run: |
+          SERVICE_NAME=$(basename "${{ inputs.service-name }}")
+          echo "name=$SERVICE_NAME" >> $GITHUB_OUTPUT
+          echo "Sanitized service name: $SERVICE_NAME"
+
       - name: Compile Source Code
         working-directory: ./${{ inputs.service-name }}
         run: |
-          echo "📦 Compiling ${{ inputs.service-name }}..."
+          echo "Compiling ${{ inputs.service-name }}..."
           mvn clean compile -B -V
 
       - name: Package Application
         working-directory: ./${{ inputs.service-name }}
         run: |
-          echo "📦 Packaging ${{ inputs.service-name }} as JAR..."
+          echo "Packaging ${{ inputs.service-name }} as JAR..."
           mvn package -DskipTests -B
 
       - name: Upload JAR Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.service-name }}-jar
+          name: ${{ steps.service.outputs.name }}-jar
           path: ${{ inputs.service-name }}/target/*.jar
           retention-days: 1
 
       - name: Upload Compiled Classes
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.service-name }}-classes
+          name: ${{ steps.service.outputs.name }}-classes
           path: |
             ${{ inputs.service-name }}/target/classes
             ${{ inputs.service-name }}/target/test-classes
@@ -67,7 +74,7 @@ jobs:
   # ============================================================================
 
   unit-tests:
-    name: 🧪 Unit Tests - ${{ inputs.service-name }}
+    name: Unit Tests - ${{ inputs.service-name }}
     runs-on: ubuntu-latest
     needs: build
 
@@ -82,23 +89,29 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
           cache: 'maven'
 
+      - name: Extract Service Name
+        id: service
+        run: |
+          SERVICE_NAME=$(basename "${{ inputs.service-name }}")
+          echo "name=$SERVICE_NAME" >> $GITHUB_OUTPUT
+
       - name: Download Compiled Classes
         uses: actions/download-artifact@v4
         with:
-          name: ${{ inputs.service-name }}-classes
+          name: ${{ steps.service.outputs.name }}-classes
           path: ${{ inputs.service-name }}/target
 
       - name: Run Unit Tests
         working-directory: ./${{ inputs.service-name }}
         run: |
-          echo "🧪 Running unit tests for ${{ inputs.service-name }}..."
+          echo "Running unit tests for ${{ inputs.service-name }}..."
           mvn test -B
 
       - name: Upload Test Results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.service-name }}-test-results
+          name: ${{ steps.service.outputs.name }}-test-results
           path: ${{ inputs.service-name }}/target/surefire-reports
           retention-days: 7
 
@@ -107,7 +120,7 @@ jobs:
         working-directory: ./${{ inputs.service-name }}
         run: |
           if [ -d "target/surefire-reports" ]; then
-            echo "📊 Test Results for ${{ inputs.service-name }}:"
+            echo "Test Results for ${{ inputs.service-name }}:"
             echo "---------------------------------------------------"
 
             # Count test files
@@ -122,13 +135,13 @@ jobs:
             # Show failures if any
             if grep -q "failure" target/surefire-reports/*.xml 2>/dev/null; then
               echo ""
-              echo "❌ FAILURES DETECTED:"
+              echo "FAILURES DETECTED:"
               grep -h "failure" target/surefire-reports/*.xml || true
             fi
           fi
 
   integration-tests:
-    name: 🔗 Integration Tests - ${{ inputs.service-name }}
+    name: Integration Tests - ${{ inputs.service-name }}
     runs-on: ubuntu-latest
     needs: build
 
@@ -143,16 +156,22 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
           cache: 'maven'
 
+      - name: Extract Service Name
+        id: service
+        run: |
+          SERVICE_NAME=$(basename "${{ inputs.service-name }}")
+          echo "name=$SERVICE_NAME" >> $GITHUB_OUTPUT
+
       - name: Download Compiled Classes
         uses: actions/download-artifact@v4
         with:
-          name: ${{ inputs.service-name }}-classes
+          name: ${{ steps.service.outputs.name }}-classes
           path: ${{ inputs.service-name }}/target
 
       - name: Run Integration Tests
         working-directory: ./${{ inputs.service-name }}
         run: |
-          echo "🔗 Running integration tests for ${{ inputs.service-name }}..."
+          echo "Running integration tests for ${{ inputs.service-name }}..."
           # For now, using verify which includes integration-test phase
           # You can customize this to run specific integration tests
           mvn verify -DskipUnitTests -B || echo "No integration tests configured"
@@ -161,12 +180,12 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.service-name }}-integration-test-results
+          name: ${{ steps.service.outputs.name }}-integration-test-results
           path: ${{ inputs.service-name }}/target/failsafe-reports
           retention-days: 7
 
   code-quality:
-    name: 📊 Code Quality - ${{ inputs.service-name }}
+    name: Code Quality - ${{ inputs.service-name }}
     runs-on: ubuntu-latest
     needs: build
 
@@ -181,16 +200,22 @@ jobs:
           java-version: ${{ env.JAVA_VERSION }}
           cache: 'maven'
 
+      - name: Extract Service Name
+        id: service
+        run: |
+          SERVICE_NAME=$(basename "${{ inputs.service-name }}")
+          echo "name=$SERVICE_NAME" >> $GITHUB_OUTPUT
+
       - name: Download Compiled Classes
         uses: actions/download-artifact@v4
         with:
-          name: ${{ inputs.service-name }}-classes
+          name: ${{ steps.service.outputs.name }}-classes
           path: ${{ inputs.service-name }}/target
 
       - name: Run Code Quality Checks
         working-directory: ./${{ inputs.service-name }}
         run: |
-          echo "📊 Running code quality checks for ${{ inputs.service-name }}..."
+          echo "Running code quality checks for ${{ inputs.service-name }}..."
           # Generate test coverage report
           mvn jacoco:report -B || echo "Jacoco not configured"
 
@@ -203,7 +228,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.service-name }}-coverage
+          name: ${{ steps.service.outputs.name }}-coverage
           path: ${{ inputs.service-name }}/target/site/jacoco
           retention-days: 7
 
@@ -212,7 +237,7 @@ jobs:
   # ============================================================================
 
   docker-deploy:
-    name: 🐳 Docker Deploy - ${{ inputs.service-name }}
+    name: Docker Deploy - ${{ inputs.service-name }}
     runs-on: ubuntu-latest
     needs: [build, unit-tests, integration-tests, code-quality]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -221,10 +246,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Extract Service Name
+        id: service
+        run: |
+          SERVICE_NAME=$(basename "${{ inputs.service-name }}")
+          echo "name=$SERVICE_NAME" >> $GITHUB_OUTPUT
+
       - name: Download JAR Artifact
         uses: actions/download-artifact@v4
         with:
-          name: ${{ inputs.service-name }}-jar
+          name: ${{ steps.service.outputs.name }}-jar
           path: ${{ inputs.service-name }}/target
 
       - name: Set up Docker Buildx
@@ -243,7 +274,7 @@ jobs:
           VERSION_TAG="v1.0.${GITHUB_RUN_NUMBER}-${SHORT_SHA}"
           echo "version=$VERSION_TAG" >> $GITHUB_OUTPUT
           echo "sha=$SHORT_SHA" >> $GITHUB_OUTPUT
-          echo "📦 Version: $VERSION_TAG"
+          echo "Version: $VERSION_TAG"
 
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v5
@@ -263,11 +294,11 @@ jobs:
 
       - name: Image Published
         run: |
-          echo "✅ Docker image published successfully!"
+          echo "Docker image published successfully"
           echo "---------------------------------------------------"
-          echo "📦 Version Tag: ${{ steps.version.outputs.version }}"
-          echo "🔖 Latest Tag: latest"
-          echo "🐳 Image: ${{ env.DOCKER_USERNAME }}/ecommerce-${{ inputs.service-name }}"
+          echo "Version Tag: ${{ steps.version.outputs.version }}"
+          echo "Latest Tag: latest"
+          echo "Image: ${{ env.DOCKER_USERNAME }}/ecommerce-${{ inputs.service-name }}"
           echo "---------------------------------------------------"
           echo "Pull with:"
           echo "  docker pull ${{ env.DOCKER_USERNAME }}/ecommerce-${{ inputs.service-name }}:${{ steps.version.outputs.version }}"
@@ -275,14 +306,14 @@ jobs:
 
       - name: Create Deployment Summary
         run: |
-          echo "## 🚀 Deployment Summary - ${{ inputs.service-name }}" >> $GITHUB_STEP_SUMMARY
+          echo "## Deployment Summary - ${{ inputs.service-name }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Stage | Status |" >> $GITHUB_STEP_SUMMARY
           echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Build | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
-          echo "| Unit Tests | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
-          echo "| Integration Tests | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
-          echo "| Code Quality | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
-          echo "| Docker Deploy | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          echo "| Build | Passed |" >> $GITHUB_STEP_SUMMARY
+          echo "| Unit Tests | Passed |" >> $GITHUB_STEP_SUMMARY
+          echo "| Integration Tests | Passed |" >> $GITHUB_STEP_SUMMARY
+          echo "| Code Quality | Passed |" >> $GITHUB_STEP_SUMMARY
+          echo "| Docker Deploy | Passed |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Image:** \`${{ env.DOCKER_USERNAME }}/ecommerce-${{ inputs.service-name }}:${{ steps.version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
