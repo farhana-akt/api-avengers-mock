@@ -41,29 +41,29 @@ jobs:
         with:
           filters: |
             eureka:
-              - 'eureka-server/**'
+              - 'services/eureka-server/**'
             config:
-              - 'config-server/**'
+              - 'services/config-server/**'
             gateway:
-              - 'api-gateway/**'
+              - 'services/api-gateway/**'
             user:
-              - 'user-service/**'
+              - 'services/user-service/**'
             auth:
-              - 'auth-service/**'
+              - 'services/auth-service/**'
             product:
-              - 'product-service/**'
+              - 'services/product-service/**'
             inventory:
-              - 'inventory-service/**'
+              - 'services/inventory-service/**'
             cart:
-              - 'cart-service/**'
+              - 'services/cart-service/**'
             order:
-              - 'order-service/**'
+              - 'services/order-service/**'
             payment:
-              - 'payment-service/**'
+              - 'services/payment-service/**'
             notification:
-              - 'notification-service/**'
+              - 'services/notification-service/**'
             frontend:
-              - 'frontend/**'
+              - 'services/frontend/**'
 
   # Call service-specific workflows
   build-eureka:
@@ -71,7 +71,7 @@ jobs:
     needs: detect-changes
     uses: ./.github/workflows/service-build.yml
     with:
-      service-name: eureka-server
+      service-name: services/eureka-server
     secrets: inherit
 
   build-config:
@@ -79,7 +79,7 @@ jobs:
     needs: detect-changes
     uses: ./.github/workflows/service-build.yml
     with:
-      service-name: config-server
+      service-name: services/config-server
     secrets: inherit
 
   build-gateway:
@@ -87,7 +87,7 @@ jobs:
     needs: detect-changes
     uses: ./.github/workflows/service-build.yml
     with:
-      service-name: api-gateway
+      service-name: services/api-gateway
     secrets: inherit
 
   build-user:
@@ -95,7 +95,7 @@ jobs:
     needs: detect-changes
     uses: ./.github/workflows/service-build.yml
     with:
-      service-name: user-service
+      service-name: services/user-service
     secrets: inherit
 
   build-auth:
@@ -103,7 +103,7 @@ jobs:
     needs: detect-changes
     uses: ./.github/workflows/service-build.yml
     with:
-      service-name: auth-service
+      service-name: services/auth-service
     secrets: inherit
 
   build-product:
@@ -111,7 +111,7 @@ jobs:
     needs: detect-changes
     uses: ./.github/workflows/service-build.yml
     with:
-      service-name: product-service
+      service-name: services/product-service
     secrets: inherit
 
   build-inventory:
@@ -119,7 +119,7 @@ jobs:
     needs: detect-changes
     uses: ./.github/workflows/service-build.yml
     with:
-      service-name: inventory-service
+      service-name: services/inventory-service
     secrets: inherit
 
   build-cart:
@@ -127,7 +127,7 @@ jobs:
     needs: detect-changes
     uses: ./.github/workflows/service-build.yml
     with:
-      service-name: cart-service
+      service-name: services/cart-service
     secrets: inherit
 
   build-order:
@@ -135,7 +135,7 @@ jobs:
     needs: detect-changes
     uses: ./.github/workflows/service-build.yml
     with:
-      service-name: order-service
+      service-name: services/order-service
     secrets: inherit
 
   build-payment:
@@ -143,7 +143,7 @@ jobs:
     needs: detect-changes
     uses: ./.github/workflows/service-build.yml
     with:
-      service-name: payment-service
+      service-name: services/payment-service
     secrets: inherit
 
   build-notification:
@@ -151,7 +151,7 @@ jobs:
     needs: detect-changes
     uses: ./.github/workflows/service-build.yml
     with:
-      service-name: notification-service
+      service-name: services/notification-service
     secrets: inherit
 
   build-frontend:
