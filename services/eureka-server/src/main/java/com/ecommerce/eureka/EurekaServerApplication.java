@@ -12,7 +12,10 @@ import org.springframework.cloud.netflix.eureka.server.EnableEurekaServer;
  *
  * Port: 8761
  * Dashboard: http://localhost:8761
- * @author API Avengers Team - v1.0
+ *
+ * CI/CD Pipeline: Multi-stage build with unit tests, integration tests, and code quality checks
+ *
+ * @author API Avengers Team - v1.1
  */
 @SpringBootApplication
 @EnableEurekaServer
