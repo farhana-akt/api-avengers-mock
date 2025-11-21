@@ -283,10 +283,10 @@ jobs:
           file: ./${{ inputs.service-name }}/Dockerfile
           push: true
           tags: |
-            ${{ env.DOCKER_USERNAME }}/ecommerce-${{ inputs.service-name }}:${{ steps.version.outputs.version }}
-            ${{ env.DOCKER_USERNAME }}/ecommerce-${{ inputs.service-name }}:latest
-          cache-from: type=registry,ref=${{ env.DOCKER_USERNAME }}/ecommerce-${{ inputs.service-name }}:buildcache
-          cache-to: type=registry,ref=${{ env.DOCKER_USERNAME }}/ecommerce-${{ inputs.service-name }}:buildcache,mode=max
+            ${{ env.DOCKER_USERNAME }}/ecommerce-${{ steps.service.outputs.name }}:${{ steps.version.outputs.version }}
+            ${{ env.DOCKER_USERNAME }}/ecommerce-${{ steps.service.outputs.name }}:latest
+          cache-from: type=registry,ref=${{ env.DOCKER_USERNAME }}/ecommerce-${{ steps.service.outputs.name }}:buildcache
+          cache-to: type=registry,ref=${{ env.DOCKER_USERNAME }}/ecommerce-${{ steps.service.outputs.name }}:buildcache,mode=max
           build-args: |
             BUILD_DATE=${{ github.event.head_commit.timestamp }}
             VCS_REF=${{ github.sha }}
@@ -298,11 +298,11 @@ jobs:
           echo "---------------------------------------------------"
           echo "Version Tag: ${{ steps.version.outputs.version }}"
           echo "Latest Tag: latest"
-          echo "Image: ${{ env.DOCKER_USERNAME }}/ecommerce-${{ inputs.service-name }}"
+          echo "Image: ${{ env.DOCKER_USERNAME }}/ecommerce-${{ steps.service.outputs.name }}"
           echo "---------------------------------------------------"
           echo "Pull with:"
-          echo "  docker pull ${{ env.DOCKER_USERNAME }}/ecommerce-${{ inputs.service-name }}:${{ steps.version.outputs.version }}"
-          echo "  docker pull ${{ env.DOCKER_USERNAME }}/ecommerce-${{ inputs.service-name }}:latest"
+          echo "  docker pull ${{ env.DOCKER_USERNAME }}/ecommerce-${{ steps.service.outputs.name }}:${{ steps.version.outputs.version }}"
+          echo "  docker pull ${{ env.DOCKER_USERNAME }}/ecommerce-${{ steps.service.outputs.name }}:latest"
 
       - name: Create Deployment Summary
         run: |
@@ -316,4 +316,4 @@ jobs:
           echo "| Code Quality | Passed |" >> $GITHUB_STEP_SUMMARY
           echo "| Docker Deploy | Passed |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Image:** \`${{ env.DOCKER_USERNAME }}/ecommerce-${{ inputs.service-name }}:${{ steps.version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Image:** \`${{ env.DOCKER_USERNAME }}/ecommerce-${{ steps.service.outputs.name }}:${{ steps.version.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY

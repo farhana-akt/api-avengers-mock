@@ -173,4 +173,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check Status
-        run: echo "🎉 CI/CD Pipeline completed!"
+        run: echo "CI/CD Pipeline completed!"
