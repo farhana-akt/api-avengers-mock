@@ -18,13 +18,34 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Validate Frontend Files
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: services/frontend/package.json
+
+      - name: Validate React App Structure
         run: |
-          echo "✅ Validating frontend structure..."
-          test -f "services/frontend/index.html" || (echo "❌ index.html not found" && exit 1)
-          test -f "services/frontend/app.js" || (echo "❌ app.js not found" && exit 1)
-          test -f "services/frontend/style.css" || (echo "❌ style.css not found" && exit 1)
-          echo "✅ All frontend files present"
+          echo "✅ Validating React app structure..."
+          test -f "services/frontend/package.json" || (echo "❌ package.json not found" && exit 1)
+          test -d "services/frontend/src" || (echo "❌ src directory not found" && exit 1)
+          test -d "services/frontend/public" || (echo "❌ public directory not found" && exit 1)
+          test -f "services/frontend/src/App.js" || (echo "❌ App.js not found" && exit 1)
+          echo "✅ React app structure validated"
+
+      - name: Install Dependencies
+        working-directory: services/frontend
+        run: |
+          echo "📦 Installing dependencies..."
+          npm ci
+
+      - name: Build React App
+        working-directory: services/frontend
+        run: |
+          echo "🔨 Building React app..."
+          npm run build
+          echo "✅ Build completed successfully"
 
   docker-build-push:
     name: Docker Build & Push Frontend

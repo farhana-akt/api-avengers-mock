@@ -52,12 +52,12 @@ execute_sql() {
 
 # Populate Product Database
 echo -e "${BLUE}1/2: Populating Product Database${NC}"
-execute_sql "postgres-product" "productdb" "database/init-scripts/01-products.sql" "Product data"
+execute_sql "postgres-product" "productdb" "utilities/database/init-scripts/01-products.sql" "Product data"
 echo ""
 
 # Populate Inventory Database
 echo -e "${BLUE}2/2: Populating Inventory Database${NC}"
-execute_sql "postgres-inventory" "inventorydb" "database/init-scripts/02-inventory.sql" "Inventory data"
+execute_sql "postgres-inventory" "inventorydb" "utilities/database/init-scripts/02-inventory.sql" "Inventory data"
 echo ""
 
 # Verify data
