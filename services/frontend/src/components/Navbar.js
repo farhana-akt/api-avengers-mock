@@ -21,6 +21,7 @@ import {
 function Navbar({ user, onLogout }) {
   const navigate = useNavigate();
   const location = useLocation();
+  // eslint-disable-next-line no-unused-vars
   const [cartCount, setCartCount] = React.useState(0);
 
   const handleNavigation = (path) => {

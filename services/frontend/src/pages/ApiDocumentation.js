@@ -9,7 +9,6 @@ import {
   Chip,
   Paper,
   Grid,
-  Divider,
   Card,
   CardContent,
   Alert
@@ -24,8 +23,7 @@ import {
   Receipt,
   Payment,
   ArrowForward,
-  Check,
-  Close
+  Check
 } from '@mui/icons-material';
 import { ENDPOINT_MAPPINGS, MICROSERVICES, API_BASE_URL } from '../config/endpointMappings';
 

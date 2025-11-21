@@ -3,7 +3,6 @@ import {
   Container,
   Typography,
   Paper,
-  Box,
   Chip,
   CircularProgress,
   Accordion,
