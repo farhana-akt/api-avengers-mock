@@ -13,7 +13,7 @@ import {
   Alert,
   CircularProgress
 } from '@mui/material';
-import { AddShopping, Search } from '@mui/icons-material';
+import { AddShoppingCart, Search } from '@mui/icons-material';
 import { productAPI, cartAPI } from '../services/api';
 
 function Products({ user }) {
@@ -153,7 +153,7 @@ function Products({ user }) {
                 <Button
                   fullWidth
                   variant="contained"
-                  startIcon={<AddShopping />}
+                  startIcon={<AddShoppingCart />}
                   onClick={() => handleAddToCart(product)}
                 >
                   Add to Cart
